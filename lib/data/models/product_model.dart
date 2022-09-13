@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-
+import 'dart:convert';
 part 'product_model.g.dart';
 
 @HiveType(typeId: 1)
@@ -61,5 +61,12 @@ class ProductModel {
       price: map['price']?.toDouble() ?? 0.0,
       types: List<String>.from(map['types']),
     );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  @override
+  String toString() {
+    return toJson();
   }
 }

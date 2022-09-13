@@ -36,13 +36,13 @@ class LogInterceptor extends InterceptorsWrapper {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    logger.i(
-      "onRequest: ${options.uri}\n"
-      "method=${options.method}\n"
-      "headers=${options.headers}\n"
-      "queryParameters=${options.queryParameters}\n"
-      "body=${options.data}",
-    );
+    // logger.i(
+    //   "onRequest: ${options.uri}\n"
+    //   "method=${options.method}\n"
+    //   "headers=${options.headers}\n"
+    //   "queryParameters=${options.queryParameters}\n"
+    //   "body=${options.data}",
+    // );
     handler.next(options);
   }
 
@@ -51,10 +51,10 @@ class LogInterceptor extends InterceptorsWrapper {
     Response response,
     ResponseInterceptorHandler handler,
   ) {
-    logger.i(
-      "statusCode=${response.statusCode}\n"
-      "responseBody=${response.data}",
-    );
+    // logger.i(
+    //   "statusCode=${response.statusCode}\n"
+    //   "responseBody=${response.data}",
+    // );
     super.onResponse(response, handler);
   }
 
@@ -63,10 +63,10 @@ class LogInterceptor extends InterceptorsWrapper {
     DioError err,
     ErrorInterceptorHandler handler,
   ) {
-    logger.e(
-      "onError: $err\n"
-      "Response: ${err.response}",
-    );
+    // logger.e(
+    //   "onError: $err\n"
+    //   "Response: ${err.response}",
+    // );
     super.onError(err, handler);
   }
 }

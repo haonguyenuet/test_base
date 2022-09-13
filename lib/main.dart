@@ -1,4 +1,7 @@
 import 'package:custom_widgets/data/models/product_model.dart';
+import 'package:custom_widgets/data/repositories/base/base_response.dart';
+import 'package:custom_widgets/data/repositories/product_repository.dart';
+import 'package:custom_widgets/data/sources/local/database/entities/list_product_response.dart';
 import 'package:custom_widgets/data/sources/local/storage/local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -7,23 +10,15 @@ import 'package:logger/logger.dart';
 var logger = Logger();
 void main() async {
   await Hive.initFlutter();
+  await LocalStorage.init();
+
+  Hive.registerAdapter(ListProductResponseAdapter());
   Hive.registerAdapter(ProductModelAdapter());
 
-  var products = await Hive.openBox<ProductModel>('abc');
-  products.clear();
+  Hive.openBox<ListProductResponse>("ListProductResponse");
 
-  var a = ProductModel(desc: "a");
-  var b = ProductModel(desc: "b");
-  var c = ProductModel(desc: "c");
-  products.addAll([a, b, c]);
-
-  // mario.friends = HiveList(persons); // Create a HiveList
-  // mario.friends.addAll([luna, alex]); // Update Mario's friends
-  // mario.save(); // make persistent the change,
-  // print(mario.friends);
-
-  // luna.delete(); // Remove Luna from Hive
-  print(products.length);
+  final repo = ProductRepository();
+  repo.getProducts();
 
   runApp(const MyApp());
 }

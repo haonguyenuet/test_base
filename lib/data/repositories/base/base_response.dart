@@ -9,15 +9,22 @@ Response as an object which usually includes the following keys:
 - message: text from serverside
 */
 
-class BaseResponse {
+import 'package:custom_widgets/data/models/pagination_model.dart';
+
+typedef MapParser<E> = E Function(Map<String, dynamic> map)?;
+typedef EntityMapper<E> = E Function(Map<String, dynamic> map)?;
+
+
+class BaseResponse<E> {
   final bool status;
   final String messsage;
+  bool get isSuccess => status == true;
 
   BaseResponse(this.status, this.messsage);
 }
 
-class SingleEntryResponse<T> extends BaseResponse {
-  final T? data;
+class SingleEntryResponse<E> extends BaseResponse<E> {
+  final E? data;
 
   SingleEntryResponse({
     this.data,
@@ -27,18 +34,28 @@ class SingleEntryResponse<T> extends BaseResponse {
 
   factory SingleEntryResponse.fromMap(
     Map<String, dynamic> map,
-    Function(Map<String, dynamic> map) fromMap,
+    MapParser<E> mapParser,
   ) {
-    return SingleEntryResponse<T>(
-      status: map["status"],
-      messsage: map["message"],
-      data: map["data"] != null ? fromMap(map["data"]) : null,
+    return SingleEntryResponse<E>(
+      status: map["status"] ?? false,
+      messsage: map["message"] ?? "",
+      data: map["data"] != null && mapParser != null
+          ? mapParser(map["data"])
+          : null,
+    );
+  }
+
+  factory SingleEntryResponse.fromEntity(entity) {
+    return SingleEntryResponse<E>(
+      status: true,
+      messsage: "",
+      data: entity.data,
     );
   }
 }
 
-class ListEntriesResponse<T> extends BaseResponse {
-  final List<T> data;
+class ListEntriesResponse<E> extends BaseResponse<E> {
+  final List<E> data;
   final Pagination pagination;
 
   ListEntriesResponse({
@@ -50,38 +67,24 @@ class ListEntriesResponse<T> extends BaseResponse {
 
   factory ListEntriesResponse.fromMap(
     Map<String, dynamic> map,
-    Function(Map<String, dynamic> map) fromMap,
+    MapParser<E> mapParser,
   ) {
-    return ListEntriesResponse<T>(
-      status: map["status"],
-      messsage: map["message"],
-      data: map['data'] != null
-          ? List<T>.from(map['data']?.map((x) => fromMap(x)))
+    return ListEntriesResponse<E>(
+      status: map["status"] ?? false,
+      messsage: map["message"] ?? "",
+      data: map['data'] != null && mapParser != null
+          ? List<E>.from(map['data']?.map((x) => mapParser(x)))
           : [],
       pagination: Pagination.fromMap(map['pagination']),
     );
   }
-}
 
-class Pagination {
-  final int page;
-  final int pageSize;
-  final int pageCount;
-  final int total;
-
-  const Pagination({
-    this.page = 0,
-    this.pageSize = 0,
-    this.pageCount = 0,
-    this.total = 0,
-  });
-
-  factory Pagination.fromMap(Map<String, dynamic> map) {
-    return Pagination(
-      page: map['page'] ?? 0,
-      pageSize: map['pageSize'] ?? 0,
-      pageCount: map['pageCount'] ?? 0,
-      total: map['total'] ?? 0,
+  factory ListEntriesResponse.fromEntity(entity) {
+    return ListEntriesResponse<E>(
+      status: true,
+      messsage: "",
+      data: entity.data,
+      pagination: entity.pagination,
     );
   }
 }

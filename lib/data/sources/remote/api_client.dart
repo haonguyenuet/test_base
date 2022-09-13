@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:custom_widgets/data/sources/local/storage/local_storage.dart';
+import 'package:custom_widgets/exceptions/connection_exception.dart';
 import 'package:custom_widgets/main.dart';
+import 'package:custom_widgets/utils/connection_util.dart';
 import 'package:dio/dio.dart';
 import 'package:http_mock_adapter/http_mock_adapter.dart';
 
@@ -86,10 +88,10 @@ class ApiClient {
     dynamic body,
   }) async {
     // Check connection
-    // final hasConnection = await ConnectionUtil.isNetworkAvailable();
-    // if (!hasConnection) {
-    //   throw ConnectionException();
-    // }
+    final hasConnection = await ConnectionUtil.isNetworkAvailable();
+    if (!hasConnection) {
+      throw ConnectionException();
+    }
 
     var response = await _dio.request(
       path,
@@ -112,32 +114,57 @@ class ApiClient {
         server.reply(
           HttpStatus.ok,
           {
-            "requestId": "",
-            "status": "0",
-            "desc": "SUCCESS",
-            "message": null,
-            "data": {"token": "Token data"}
+            "status": true,
+            "data": [
+              {
+                "id": 1,
+                "desc": "product1",
+                "isAvailable": false,
+                "price": 100.0,
+                "types": []
+              },
+              {
+                "id": 2,
+                "desc": "product2",
+                "isAvailable": false,
+                "price": 100.0,
+                "types": []
+              },
+              {
+                "id": 3,
+                "desc": "product3",
+                "isAvailable": false,
+                "price": 100.0,
+                "types": []
+              }
+            ],
+            "pagination": {
+              "page": 0,
+              "pageSize": 10,
+              "pageCount": 1,
+              "total": 3,
+            },
           },
           // Reply would wait for one-sec before returning data.
-          delay: const Duration(seconds: 3),
+          delay: const Duration(seconds: 1),
         )
       },
       data: Matchers.any,
     );
     dioAdapter.onGet(
-      "/products/:id",
+      "/products/1",
       (server) => {
         server.reply(
           HttpStatus.ok,
           {
-            "requestId": "799637ab-4bf4-4bc4-86dd-7aa7a36488c7",
-            "status": "0",
-            "desc": "Success",
-            "message": "",
-            "data": [
-              {"id": 1, "title": "Title 1", "description": "Description 1"},
-              {"id": 2, "title": "Title 2", "description": "Description 2"}
-            ]
+            "status": true,
+            "data": {
+              "id": 1,
+              "desc": "product1",
+              "isAvailable": false,
+              "price": 100.0,
+              "types": []
+            }
           },
           // Reply would wait for one-sec before returning data.
           delay: const Duration(seconds: 10),
