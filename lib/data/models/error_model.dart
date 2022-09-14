@@ -46,7 +46,7 @@ class ErrorModel {
   const ErrorModel.internalServer({String? message})
       : this._(code: ErrorCode.internalServer, message: message ?? "Internal Server");
 
-  factory ErrorModel.parseException(Exception exception) {
+  factory ErrorModel.parseException(Object exception) {
     ErrorModel errorEntity = const ErrorModel.unknown();
 
     if (exception is ConnectionException) {

@@ -1,8 +1,8 @@
 import 'package:custom_widgets/data/models/error_model.dart';
 
-class RepoResult<T> {
+class RepoResult<R> {
   final bool isSuccess;
-  final T? response;
+  final R? response;
   final ErrorModel? error;
 
   const RepoResult({
@@ -11,7 +11,7 @@ class RepoResult<T> {
     this.error,
   });
 
-  factory RepoResult.success(T? response) {
+  factory RepoResult.success(R? response) {
     return RepoResult(
       isSuccess: true,
       response: response,
@@ -26,7 +26,7 @@ class RepoResult<T> {
   }
 
   void when({
-    void Function(T?)? success,
+    void Function(R?)? success,
     void Function(ErrorModel?)? failure,
   }) {
     if (isSuccess) {

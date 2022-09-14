@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class ProductModel {
+class ProductEntry {
   final int id;
 
   final String desc;
@@ -11,7 +11,7 @@ class ProductModel {
 
   final List<String> types;
 
-  ProductModel({
+  ProductEntry({
     this.id = -1,
     this.desc = "",
     this.isAvailable = false,
@@ -19,14 +19,14 @@ class ProductModel {
     this.types = const <String>[],
   });
 
-  ProductModel copyWith({
+  ProductEntry copyWith({
     int? id,
     String? desc,
     bool? isAvailable,
     double? price,
     List<String>? types,
   }) {
-    return ProductModel(
+    return ProductEntry(
       id: id ?? this.id,
       desc: desc ?? this.desc,
       isAvailable: isAvailable ?? this.isAvailable,
@@ -45,8 +45,8 @@ class ProductModel {
     };
   }
 
-  factory ProductModel.fromMap(Map<String, dynamic> map) {
-    return ProductModel(
+  factory ProductEntry.fromMap(Map<String, dynamic> map) {
+    return ProductEntry(
       id: map['id']?.toInt() ?? 0,
       desc: map['desc'] ?? '',
       isAvailable: map['isAvailable'] ?? false,

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:custom_widgets/data/models/error_model.dart';
 import 'package:custom_widgets/data/repositories/base/base_response.dart';
 import 'package:custom_widgets/data/repositories/base/repo_result.dart';
@@ -21,42 +24,72 @@ extension FetchTypeExt on FetchType {
 }
 
 class BaseRepository {
-  RepoResult<R> safeLocalCall<R extends BaseResponse<E>, E>({
-    required String key,
+  Stream<RepoResult<SingleEntryResponse<E>>> expectSingleEntryResponse<E>({
+    required Future remoteReq,
+    required String localKey,
     required MapParser<E> mapParser,
-  }) {
-    try {
-      final data = LocalDatabase.get(key);
-      final response = _handleData<R, E>(data, mapParser);
-      return RepoResult.success(response);
-    } on Exception catch (exception) {
-      final error = ErrorModel.parseException(exception);
-      return RepoResult.failure(error);
-    } catch (e) {
-      return RepoResult.failure(null);
-    }
+    FetchType fetchType = FetchType.both,
+    bool cacheData = true,
+  }) async* {
+    yield* _handleRequest<SingleEntryResponse<E>, E>(
+      remoteReq: remoteReq,
+      localKey: localKey,
+      mapParser: mapParser,
+      fetchType: fetchType,
+      cacheData: cacheData,
+    );
   }
 
-  Future<RepoResult<R>> safeRemoteCall<R extends BaseResponse<E>, E>({
-    required Future request,
+  Stream<RepoResult<ListEntriesResponse<E>>> expectListEntriesResponse<E>({
+    required Future remoteReq,
+    required String localKey,
     required MapParser<E> mapParser,
-    Function(Map<String, dynamic>)? cacheData,
-  }) async {
-    // (Dio documents)
-    // The request was made and the server responded with a status code
-    // Failed when out of the range of 2xx and jump into catch scope
-    // => don't need to check status code == 200, et...
+    FetchType fetchType = FetchType.both,
+    bool cacheData = true,
+  }) async* {
+    yield* _handleRequest<ListEntriesResponse<E>, E>(
+      remoteReq: remoteReq,
+      localKey: localKey,
+      mapParser: mapParser,
+      fetchType: fetchType,
+      cacheData: cacheData,
+    );
+  }
+
+  Stream<RepoResult<R>> _handleRequest<R extends BaseResponse<E>, E>({
+    required Future remoteReq,
+    required String localKey,
+    required MapParser<E> mapParser,
+    FetchType fetchType = FetchType.both,
+    bool cacheData = true,
+  }) async* {
     try {
-      // response data is Map (Map is expected)
-      final data = (await request) as Map<String, dynamic>;
-      if (cacheData != null) {
-        cacheData(data);
+      if (fetchType.needFetchFromLocal) {
+        log("fetch data from databse");
+        final encodedData = LocalDatabase.get(localKey);
+        final data = json.decode(encodedData) as Map<String, dynamic>;
+        final response = _handleData<R, E>(data, mapParser);
+        yield RepoResult.success(response);
       }
-      final response = _handleData<R, E>(data, mapParser);
-      return RepoResult.success(response);
-    } on Exception catch (exception) {
+
+      if (fetchType.needFetchFromRemote) {
+        log("fetch data from remote");
+        // (Dio documents)
+        // The request was made and the server responded with a status code
+        // Failed when out of the range of 2xx and jump into catch scope
+        // => don't need to check status code == 200, et...
+        final data = (await remoteReq) as Map<String, dynamic>;
+        if (cacheData == true) {
+          final decodedData = json.encode(data);
+          LocalDatabase.put(localKey, decodedData);
+        }
+        final response = _handleData<R, E>(data, mapParser);
+        yield RepoResult.success(response);
+      }
+    } catch (exception) {
+      log("catch error");
       final error = ErrorModel.parseException(exception);
-      return RepoResult.failure(error);
+      yield RepoResult.failure(error);
     }
   }
 

@@ -14,7 +14,6 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   http_mock_adapter: ^0.3.3
-  logger: ^1.1.0
   
 
 dev_dependencies:
