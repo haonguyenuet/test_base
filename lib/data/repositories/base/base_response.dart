@@ -2,8 +2,7 @@
 Response as an object which usually includes the following keys:
 
 - data: the response data itself, which could be:
-  - null,
-  - a single entry, as an object:
+  - a single entry, as an object (or null)
   - a list of entries, as an array of objects
 - status: status of the request
 - message: text from serverside
@@ -40,14 +39,6 @@ class SingleEntryResponse<E> extends BaseResponse<E> {
           : null,
     );
   }
-
-  factory SingleEntryResponse.fromEntity(entity) {
-    return SingleEntryResponse<E>(
-      status: true,
-      messsage: "",
-      data: entity.data,
-    );
-  }
 }
 
 class ListEntriesResponse<E> extends BaseResponse<E> {
@@ -74,15 +65,6 @@ class ListEntriesResponse<E> extends BaseResponse<E> {
       pagination: map.containsKey("pagination") && map['pagination'] != null
           ? Pagination.fromMap(map['pagination'])
           : const Pagination(),
-    );
-  }
-
-  factory ListEntriesResponse.fromEntity(entity) {
-    return ListEntriesResponse<E>(
-      status: true,
-      messsage: "",
-      data: entity.data,
-      pagination: entity.pagination,
     );
   }
 }
