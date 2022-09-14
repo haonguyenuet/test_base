@@ -1,62 +1,73 @@
 import 'package:custom_widgets/data/models/error_model.dart';
 import 'package:custom_widgets/data/repositories/base/base_response.dart';
 import 'package:custom_widgets/data/repositories/base/repo_result.dart';
+import 'package:custom_widgets/data/sources/local/database/local_db.dart';
+
+enum FetchType {
+  // only fetch data from databse,
+  onlylLocal,
+  // only fetch data from remote (api)
+  onlyRemote,
+  // fetch data from database before remote
+  both
+}
+
+extension FetchTypeExt on FetchType {
+  bool get needFetchFromLocal =>
+      this == FetchType.onlylLocal || this == FetchType.both;
+
+  bool get needFetchFromRemote =>
+      this == FetchType.onlyRemote || this == FetchType.both;
+}
 
 class BaseRepository {
-  Future<RepoResult<R>> safeDBCall<R extends BaseResponse<E>, E>({
-    required Future<dynamic> request,
-  }) async {
+  RepoResult<R> safeLocalCall<R extends BaseResponse<E>, E>({
+    required String key,
+    required MapParser<E> mapParser,
+  }) {
     try {
-      dynamic response = await request;
-      // response data is Map (Map is expected)
-      if (R.toString() == (SingleEntryResponse<E>).toString()) {
-        return RepoResult.success(
-          SingleEntryResponse<E>.fromEntity(response) as R,
-        );
-      }
-      if (R.toString() == (ListEntriesResponse<E>).toString()) {
-        return RepoResult.success(
-          ListEntriesResponse<E>.fromEntity(response) as R,
-        );
-      }
-
-      // response data is another type,
-      return RepoResult.success(null);
+      final data = LocalDatabase.get(key);
+      final response = _handleData<R, E>(data, mapParser);
+      return RepoResult.success(response);
     } on Exception catch (exception) {
       final error = ErrorModel.parseException(exception);
       return RepoResult.failure(error);
+    } catch (e) {
+      return RepoResult.failure(null);
     }
   }
 
-  Future<RepoResult<R>> safeApiCall<R extends BaseResponse<E>, E>({
-    required Future<dynamic> request,
-    MapParser<E>? mapParser,
+  Future<RepoResult<R>> safeRemoteCall<R extends BaseResponse<E>, E>({
+    required Future request,
+    required MapParser<E> mapParser,
+    Function(Map<String, dynamic>)? cacheData,
   }) async {
     // (Dio documents)
     // The request was made and the server responded with a status code
     // Failed when out of the range of 2xx and jump into catch scope
     // => don't need to check status code == 200, et...
     try {
-      dynamic responseData = await request;
       // response data is Map (Map is expected)
-      if (responseData is Map<String, dynamic>) {
-        if (R.toString() == (SingleEntryResponse<E>).toString()) {
-          return RepoResult.success(
-            SingleEntryResponse<E>.fromMap(responseData, mapParser) as R,
-          );
-        }
-        if (R.toString() == (ListEntriesResponse<E>).toString()) {
-          return RepoResult.success(
-            ListEntriesResponse<E>.fromMap(responseData, mapParser) as R,
-          );
-        }
+      final data = (await request) as Map<String, dynamic>;
+      if (cacheData != null) {
+        cacheData(data);
       }
-
-      // response data is another type,
-      return RepoResult.success(null);
+      final response = _handleData<R, E>(data, mapParser);
+      return RepoResult.success(response);
     } on Exception catch (exception) {
       final error = ErrorModel.parseException(exception);
       return RepoResult.failure(error);
+    }
+  }
+
+  R _handleData<R extends BaseResponse<E>, E>(
+    Map<String, dynamic> data,
+    MapParser<E> mapParser,
+  ) {
+    if (R.toString() == (SingleEntryResponse<E>).toString()) {
+      return SingleEntryResponse<E>.fromMap(data, mapParser) as R;
+    } else {
+      return ListEntriesResponse<E>.fromMap(data, mapParser) as R;
     }
   }
 }

@@ -1,9 +1,6 @@
 import 'dart:io';
 
 import 'package:custom_widgets/data/sources/local/storage/local_storage.dart';
-import 'package:custom_widgets/exceptions/connection_exception.dart';
-import 'package:custom_widgets/main.dart';
-import 'package:custom_widgets/utils/connection_util.dart';
 import 'package:dio/dio.dart';
 import 'package:http_mock_adapter/http_mock_adapter.dart';
 
@@ -88,10 +85,10 @@ class ApiClient {
     dynamic body,
   }) async {
     // Check connection
-    final hasConnection = await ConnectionUtil.isNetworkAvailable();
-    if (!hasConnection) {
-      throw ConnectionException();
-    }
+    // final hasConnection = await ConnectionUtil.isNetworkAvailable();
+    // if (!hasConnection) {
+    //   throw ConnectionException();
+    // }
 
     var response = await _dio.request(
       path,
@@ -146,7 +143,7 @@ class ApiClient {
             },
           },
           // Reply would wait for one-sec before returning data.
-          delay: const Duration(seconds: 1),
+          delay: const Duration(seconds: 2),
         )
       },
       data: Matchers.any,

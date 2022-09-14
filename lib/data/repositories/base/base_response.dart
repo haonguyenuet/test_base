@@ -9,11 +9,7 @@ Response as an object which usually includes the following keys:
 - message: text from serverside
 */
 
-import 'package:custom_widgets/data/models/pagination_model.dart';
-
-typedef MapParser<E> = E Function(Map<String, dynamic> map)?;
-typedef EntityMapper<E> = E Function(Map<String, dynamic> map)?;
-
+typedef MapParser<E> = E Function(Map<String, dynamic> map);
 
 class BaseResponse<E> {
   final bool status;
@@ -37,9 +33,9 @@ class SingleEntryResponse<E> extends BaseResponse<E> {
     MapParser<E> mapParser,
   ) {
     return SingleEntryResponse<E>(
-      status: map["status"] ?? false,
-      messsage: map["message"] ?? "",
-      data: map["data"] != null && mapParser != null
+      status: map.containsKey("status") ? map["status"] : false,
+      messsage: map.containsKey("message") ? map["message"] : "",
+      data: map.containsKey("data") && map['data'] != null
           ? mapParser(map["data"])
           : null,
     );
@@ -70,12 +66,14 @@ class ListEntriesResponse<E> extends BaseResponse<E> {
     MapParser<E> mapParser,
   ) {
     return ListEntriesResponse<E>(
-      status: map["status"] ?? false,
-      messsage: map["message"] ?? "",
-      data: map['data'] != null && mapParser != null
+      status: map.containsKey("status") ? map["status"] : false,
+      messsage: map.containsKey("message") ? map["message"] : "",
+      data: map.containsKey("data") && map['data'] != null
           ? List<E>.from(map['data']?.map((x) => mapParser(x)))
           : [],
-      pagination: Pagination.fromMap(map['pagination']),
+      pagination: map.containsKey("pagination") && map['pagination'] != null
+          ? Pagination.fromMap(map['pagination'])
+          : const Pagination(),
     );
   }
 
@@ -85,6 +83,29 @@ class ListEntriesResponse<E> extends BaseResponse<E> {
       messsage: "",
       data: entity.data,
       pagination: entity.pagination,
+    );
+  }
+}
+
+class Pagination {
+  final int page;
+  final int pageSize;
+  final int pageCount;
+  final int total;
+
+  const Pagination({
+    this.page = 0,
+    this.pageSize = 0,
+    this.pageCount = 0,
+    this.total = 0,
+  });
+
+  factory Pagination.fromMap(Map<String, dynamic> map) {
+    return Pagination(
+      page: map['page'] ?? 0,
+      pageSize: map['pageSize'] ?? 0,
+      pageCount: map['pageCount'] ?? 0,
+      total: map['total'] ?? 0,
     );
   }
 }

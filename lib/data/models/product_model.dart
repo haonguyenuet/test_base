@@ -1,22 +1,14 @@
-import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
-part 'product_model.g.dart';
 
-@HiveType(typeId: 1)
 class ProductModel {
-  @HiveField(0)
   final int id;
 
-  @HiveField(1)
   final String desc;
 
-  @HiveField(2)
   final bool isAvailable;
 
-  @HiveField(3)
   final double price;
 
-  @HiveField(4)
   final List<String> types;
 
   ProductModel({
